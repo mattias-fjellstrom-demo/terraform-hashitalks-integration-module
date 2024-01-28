@@ -157,13 +157,13 @@ run "update_traffic_manager_endpoints" {
     endpoints = [
       {
         name     = "cluster01"
-        target   = run.query_service01.service_ip
+        target   = run.query_service_ips.service01_ip
         priority = 100
         enabled  = false
       },
       {
         name     = "cluster02"
-        target   = run.query_service02.service_ip
+        target   = run.query_service_ips.service02_ip
         priority = 200
         enabled  = true
       }
