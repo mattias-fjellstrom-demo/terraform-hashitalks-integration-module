@@ -20,12 +20,12 @@ variable "kube_config02" {
 
 module "platform01" {
   source      = "app.terraform.io/mattias-fjellstrom/kubernetes-platform-module/hashitalks"
-  version     = "1.0.0"
+  version     = "1.1.0"
   kube_config = var.kube_config01
 }
 
 module "platform02" {
   source      = "app.terraform.io/mattias-fjellstrom/kubernetes-platform-module/hashitalks"
-  version     = "1.0.0"
+  version     = "1.1.0"
   kube_config = var.kube_config02
 }
