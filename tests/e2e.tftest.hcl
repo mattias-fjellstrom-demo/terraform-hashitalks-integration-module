@@ -1,11 +1,20 @@
+//------------------------------------------------------------------------------
+// CONFIGURE INITIAL PROVIDERS
+//------------------------------------------------------------------------------
 provider "azurerm" {
   features {}
 }
 
+//------------------------------------------------------------------------------
+// CONFIGURE COMMON GLOBAL VARIABLES
+//------------------------------------------------------------------------------
 variables {
   name_suffix = "hashitalks2024"
 }
 
+//------------------------------------------------------------------------------
+// SET UP A RESOURCE GROUP
+//------------------------------------------------------------------------------
 run "setup_resource_group" {
   variables {
     location = "swedencentral"
@@ -22,6 +31,9 @@ run "setup_resource_group" {
   }
 }
 
+//------------------------------------------------------------------------------
+// SET UP A VIRTUAL NETWORK
+//------------------------------------------------------------------------------
 run "setup_virtual_network" {
   variables {
     resource_group  = run.setup_resource_group.resource_group
@@ -44,6 +56,9 @@ run "setup_virtual_network" {
   }
 }
 
+//------------------------------------------------------------------------------
+// SET UP TWO AKS CLUSTERS USING A HELPER MODULE
+//------------------------------------------------------------------------------
 run "setup_clusters" {
   variables {
     resource_group = run.setup_resource_group.resource_group
@@ -56,6 +71,9 @@ run "setup_clusters" {
   }
 }
 
+//------------------------------------------------------------------------------
+// SET UP ARGO CD ON THE TWO CLUSTERS USING A HELPER MODULE
+//------------------------------------------------------------------------------
 run "setup_kubernetes_platforms" {
   variables {
     kube_config01 = run.setup_clusters.cluster01_kubeconfig
@@ -67,6 +85,9 @@ run "setup_kubernetes_platforms" {
   }
 }
 
+//------------------------------------------------------------------------------
+// CONFIGURE THE KUBERNETES PROVIDER FOR EACH CLUSTER
+//------------------------------------------------------------------------------
 provider "kubernetes" {
   alias                  = "cluster01"
   host                   = run.setup_clusters.cluster01_kubeconfig.host
@@ -83,6 +104,9 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(run.setup_clusters.cluster02_kubeconfig.cluster_ca_certificate)
 }
 
+//------------------------------------------------------------------------------
+// DEPLOY TWO SAMPLE APPLICATIONS USING A HELPER MODULE
+//------------------------------------------------------------------------------
 run "setup_applications" {
   providers = {
     kubernetes.cluster01 = kubernetes.cluster01
@@ -94,6 +118,9 @@ run "setup_applications" {
   }
 }
 
+//------------------------------------------------------------------------------
+// READ THE APPLICATION SERVICE'S IP ADDRESS'
+//------------------------------------------------------------------------------
 run "query_service_ips" {
   providers = {
     kubernetes.cluster01 = kubernetes.cluster01
@@ -105,6 +132,9 @@ run "query_service_ips" {
   }
 }
 
+//------------------------------------------------------------------------------
+// SET UP TRAFFIC MANAGER
+//------------------------------------------------------------------------------
 run "set_up_traffic_manager" {
   variables {
     resource_group = run.setup_resource_group.resource_group
@@ -130,6 +160,9 @@ run "set_up_traffic_manager" {
   }
 }
 
+//------------------------------------------------------------------------------
+// TEST THAT APP01 IS REACHABLE FROM THE INTERNET
+//------------------------------------------------------------------------------
 run "poll_traffic_manager_app01" {
   variables {
     fqdn    = run.set_up_traffic_manager.traffic_manager_profile.fqdn
@@ -151,6 +184,9 @@ run "poll_traffic_manager_app01" {
   }
 }
 
+//------------------------------------------------------------------------------
+// RECONFIGURE TRAFFIC MANAGER
+//------------------------------------------------------------------------------
 run "update_traffic_manager_endpoints" {
   variables {
     resource_group = run.setup_resource_group.resource_group
@@ -176,6 +212,9 @@ run "update_traffic_manager_endpoints" {
   }
 }
 
+//------------------------------------------------------------------------------
+// TEST THAT APP02 IS REACHABLE FROM THE INTERNET
+//------------------------------------------------------------------------------
 run "poll_traffic_manager_app02" {
   variables {
     fqdn    = run.set_up_traffic_manager.traffic_manager_profile.fqdn
